@@ -2,7 +2,7 @@
 The contentful-duplicate cli allows users to duplicate entries in Contenful from the source space environment to the target space environment. The tool is written in NodeJS.
 
 # Deployment and Execution
-1.  You should have the following prerequisites:
+1.  Prerequisites:
     - NodeJS 11.5.0 (other recent versions should also work fine);
     - Contentful account (https://www.contentful.com/)
     - Create an access token to access Contentful Management API https://www.contentful.com/developers/docs/references/content-management-api/#/introduction/authentication
