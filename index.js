@@ -1,5 +1,6 @@
 /**
- * Contentful Dupplicate tool. Allows you to duplicate entries in/between Contentful spaces recursively
+ * Contentful Dupplicate tool.
+ * Allows you to duplicate entries in/between Contentful spaces recursively
  */
 
 const minimist = require('minimist');

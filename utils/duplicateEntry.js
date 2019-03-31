@@ -4,21 +4,23 @@ const error = require('./error');
 
 /**
  * Duplicate an entry recursively
- * 
+ *
  * @param {string} entryId - Entry ID
  * @param {string} environment - Source Environment
- * @param {boolean} publish - Publish Entry after duplicate or not, the created entry's status is the same with the original entry, set false to force the created entry to be draft although the original entry is published. 
+ * @param {boolean} publish - Publish Entry after duplicate or not,
+ * the created entry's status is the same with the original entry,
+ * set false to force the created entry to be draft although the original entry is published.
  * @param {Array} exclude - Array of Entry IDs that will be excluded
  * @param {boolean} isSingleLevel - If true, then it's no need to clone sub entries, just link
  * @param {string} targetEnvironment - Target Environment
  * @param {string} prefix - Prefix of the created entry name
  * @param {string} suffix - Suffix of the created entry name
  * @param {RegExp} regex - Regex pattern of the created entry name
- * @param {string} replaceStr - String replace for the created entry name 
+ * @param {string} replaceStr - String replace for the created entry name
  */
 const duplicateEntry = async (
   entryId, environment, publish, exclude, isSingleLevel, targetEnvironment,
-  prefix, suffix, regex, replaceStr) => {
+  prefix, suffix, regex, replaceStr, targetContentTypes) => {
   const spinner = ora().start();
 
   if (!exclude.includes(entryId)) {
@@ -32,7 +34,6 @@ const duplicateEntry = async (
 
     /* eslint-disable no-await-in-loop */
     for (const field of Object.keys(newEntryFields)) {
-
       // apply the new name for the new entry (if needed)
       if (field === constants.FIELD_NAME) {
         for (const localeKey of Object.keys(newEntryFields[field])) {
@@ -47,7 +48,8 @@ const duplicateEntry = async (
           newEntryFields[field][localeKey] = createdName;
         }
       } else {
-        // iterates through other fields, if the field contains a link to another entry, then duplicate
+        // iterates through other fields,
+        // if the field contains a link to another entry, then duplicate
         const fieldContent = entry.fields[field];
 
         for (const fieldContentKey of Object.keys(fieldContent)) {
@@ -62,7 +64,7 @@ const duplicateEntry = async (
 
                 const duplicatedEntry = await duplicateEntry(
                   content.sys.id, environment, publish, exclude, isSingleLevel, targetEnvironment,
-                  prefix, suffix, regex, replaceStr,
+                  prefix, suffix, regex, replaceStr, targetContentTypes,
                 );
                 fieldContentValue[contentIndex].sys.id = duplicatedEntry.sys.id;
               }
@@ -89,12 +91,15 @@ const duplicateEntry = async (
     // check if the new entry need to publish or not
     if (publish) {
       if (entry.isPublished()) {
-        // if the entry's content type has a required asset field, then the entry will be draft.
-        const contentType = await targetEnvironment.getContentType(entry.sys.contentType.sys.id);
+        // if the entry's content type has a required asset field,
+        // then the entry will be draft.
+        const contentType = targetContentTypes.items.find(
+          item => item.sys.id === entry.sys.contentType.sys.id,
+        );
+
         let canPublish = true;
-        contentType.fields.forEach(f => {
+        contentType.fields.forEach((f) => {
           if (f.linkType === constants.ASSET_TYPE && f.required) {
-            
             canPublish = false;
           }
         });
