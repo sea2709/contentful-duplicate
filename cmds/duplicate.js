@@ -10,7 +10,11 @@ const spinner = ora();
 const createdEntryContentTypes = [];
 
 const iterateCreateEntryContentTypes = async (entryId, env, excludeEntryIds) => {
-  const entry = await env.getEntry(entryId);
+  const entry = await env.getEntry(entryId)
+    .catch((err) => {
+      spinner.stop();
+      error(err.message);
+    });
   if (!createdEntryContentTypes.includes(entry.sys.contentType.sys.id)) {
     createdEntryContentTypes.push(entry.sys.contentType.sys.id);
   }
@@ -93,7 +97,10 @@ module.exports = async (args) => {
   });
   const sourceEnv = await client.getSpace(spaceId)
     .then(space => space.getEnvironment(environment))
-    .catch(err => error(err.message, true));
+    .catch((err) => {
+      spinner.stop();
+      error(err.message, true);
+    });
 
   let targetEnv = sourceEnv;
   if (args['target-space-id']) {
@@ -103,7 +110,10 @@ module.exports = async (args) => {
 
     targetEnv = await targetClient.getSpace(args['target-space-id'])
       .then(space => space.getEnvironment(targetEnvironment))
-      .catch(err => error(err.message, true));
+      .catch((err) => {
+        spinner.stop();
+        error(err.message, true);
+      });
   }
 
   // build regex object

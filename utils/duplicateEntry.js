@@ -98,11 +98,23 @@ const duplicateEntry = async (
         );
 
         let canPublish = true;
-        contentType.fields.forEach((f) => {
+        for (const f of contentType.fields) {
           if (f.linkType === constants.ASSET_TYPE && f.required) {
-            canPublish = false;
+            const entryFieldObject = entry.fields[f.id];
+
+            /* eslint-disable no-await-in-loop */
+            for (const entryFieldKey of Object.keys(entryFieldObject)) {
+              const entryFieldValue = entryFieldObject[entryFieldKey];
+
+              /* eslint-disable no-loop-func */
+              await targetEnvironment.getAsset(entryFieldValue.sys.id).catch(() => {
+                canPublish = false;
+              });
+              /* eslint-enable no-loop-func */
+            }
+            /* eslint-enable no-await-in-loop */
           }
-        });
+        }
 
         if (canPublish) {
           return newEntry.then(e => e.publish()).catch(err => error(err.message, true));
